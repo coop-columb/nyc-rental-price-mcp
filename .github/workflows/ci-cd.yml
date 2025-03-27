@@ -1,0 +1,38 @@
+name: MCP CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-and-deploy:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run pytest suite
+        run: pytest tests/
+
+      - name: Build Docker Image
+        run: docker build -t nyc-rental-price-mcp .
+
+      - name: Push Docker Image (optional for cloud deployment)
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+          docker tag nyc-rental-price-mcp $DOCKER_USERNAME/nyc-rental-price-mcp:latest
+          docker push $DOCKER_USERNAME/nyc-rental-price-mcp:latest
