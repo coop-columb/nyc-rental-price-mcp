@@ -1,15 +1,21 @@
-import requests
-from bs4 import BeautifulSoup
-import logging
-import time
 import json
+import logging
 import os
+import time
 from datetime import datetime
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+import requests
+from bs4 import BeautifulSoup
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
 
 def fetch_page(url):
-    headers = {'User-Agent': 'NYC Rental Price Prediction Project - [Your Name/Contact Info]'}
+    headers = {
+        "User-Agent": "NYC Rental Price Prediction Project - [Your Name/Contact Info]"
+    }
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
@@ -18,11 +24,13 @@ def fetch_page(url):
         logging.error(f"Request failed: {e}")
         return None
 
+
 def parse_listings(html_content):
-    soup = BeautifulSoup(html_content, 'html.parser')
+    soup = BeautifulSoup(html_content, "html.parser")
     # Implement parsing logic here
     listings = []  # Placeholder: return empty list until parsing logic is implemented
     return listings
+
 
 def scrape_listings(base_url, pages):
     all_listings = []
@@ -38,21 +46,23 @@ def scrape_listings(base_url, pages):
         time.sleep(5)  # Polite scraping
     return all_listings
 
+
 if __name__ == "__main__":
     base_url = "https://streeteasy.com/for-rent/nyc"
     pages_to_scrape = 10
     listings = scrape_listings(base_url, pages_to_scrape)
-    
+
     # Create data/raw directory if it doesn't exist
-    raw_data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "raw")
+    raw_data_dir = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "raw"
+    )
     os.makedirs(raw_data_dir, exist_ok=True)
-    
+
     # Save listings to data/raw/ with timestamp in filename
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_file = os.path.join(raw_data_dir, f"rental_listings_{timestamp}.json")
-    
-    with open(output_file, 'w') as f:
-        json.dump(listings, f, indent=4)
-    
-    logging.info(f"Saved {len(listings)} listings to {output_file}")
 
+    with open(output_file, "w") as f:
+        json.dump(listings, f, indent=4)
+
+    logging.info(f"Saved {len(listings)} listings to {output_file}")
