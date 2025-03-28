@@ -20,3 +20,4 @@ flake8>=6.0.0
 coverage>=7.2.0
 httpx>=0.24.0
 psutil
+pytest-benchmark>=1.0.0
