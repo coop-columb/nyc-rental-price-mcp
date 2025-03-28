@@ -60,24 +60,34 @@ class Scraper:
 
         for element in listing_elements:
             listing = {
-                "title": element.select_one(".title").text.strip()
-                if element.select_one(".title")
-                else "",
-                "price": element.select_one(".price").text.strip()
-                if element.select_one(".price")
-                else "",
-                "location": element.select_one(".location").text.strip()
-                if element.select_one(".location")
-                else "",
-                "bedrooms": element.select_one(".bedrooms").text.strip()
-                if element.select_one(".bedrooms")
-                else "",
-                "bathrooms": element.select_one(".bathrooms").text.strip()
-                if element.select_one(".bathrooms")
-                else "",
-                "url": element.select_one("a")["href"]
-                if element.select_one("a")
-                else "",
+                "title": (
+                    element.select_one(".title").text.strip()
+                    if element.select_one(".title")
+                    else ""
+                ),
+                "price": (
+                    element.select_one(".price").text.strip()
+                    if element.select_one(".price")
+                    else ""
+                ),
+                "location": (
+                    element.select_one(".location").text.strip()
+                    if element.select_one(".location")
+                    else ""
+                ),
+                "bedrooms": (
+                    element.select_one(".bedrooms").text.strip()
+                    if element.select_one(".bedrooms")
+                    else ""
+                ),
+                "bathrooms": (
+                    element.select_one(".bathrooms").text.strip()
+                    if element.select_one(".bathrooms")
+                    else ""
+                ),
+                "url": (
+                    element.select_one("a")["href"] if element.select_one("a") else ""
+                ),
             }
             listings.append(listing)
 
