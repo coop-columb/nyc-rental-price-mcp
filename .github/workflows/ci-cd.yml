@@ -1,4 +1,4 @@
-name: MCP CI/CD Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
@@ -12,6 +12,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
       - name: Set up Python 3.11
         uses: actions/setup-python@v3
         with:
@@ -25,14 +26,16 @@ jobs:
       - name: Run pytest suite
         run: pytest tests/
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Build Docker Image
         run: docker build -t nyc-rental-price-mcp .
 
-      - name: Push Docker Image (optional for cloud deployment)
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Push Docker Image
         run: |
-          echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-          docker tag nyc-rental-price-mcp $DOCKER_USERNAME/nyc-rental-price-mcp:latest
-          docker push $DOCKER_USERNAME/nyc-rental-price-mcp:latest
+          docker tag nyc-rental-price-mcp ${{ secrets.DOCKERHUB_USERNAME }}/nyc-rental-price-mcp:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/nyc-rental-price-mcp:latest
