@@ -49,35 +49,31 @@ class TestScraper(unittest.TestCase):
             {'title': 'Apartment 2', 'price': '$2000/month', 'location': 'Brooklyn'}
         ]
         
-    @patch('scraper.Scraper.fetch_page')
-    def test_fetch_page(self, mock_fetch):
+    def test_fetch_page(self):
         """Test that fetch_page makes the correct request."""
         # Configure the mock to return a sample response
-        mock_fetch.return_value = self.sample_html
-        
-        # Call the method under test
-        result = self.scraper.fetch_page()
-        
-        # Assert the method was called once
-        mock_fetch.assert_called_once()
-        
-        # Assert the result is what we expect
-        self.assertEqual(result, self.sample_html)
+        with patch.object(Scraper, 'fetch_page', return_value=self.sample_html) as mock_fetch:
+            # Call the method under test
+            result = self.scraper.fetch_page()
+            
+            # Assert the method was called once
+            mock_fetch.assert_called_once()
+            
+            # Assert the result is what we expect
+            self.assertEqual(result, self.sample_html)
     
-    @patch('scraper.Scraper.parse_listings')
-    def test_parse_listings(self, mock_parse):
+    def test_parse_listings(self):
         """Test that parse_listings correctly extracts data."""
         # Configure the mock to return sample data
-        mock_parse.return_value = self.expected_listings
-        
-        # Call the method under test
-        result = self.scraper.parse_listings(self.sample_html)
-        
-        # Assert the method was called with the right argument
-        mock_parse.assert_called_once_with(self.sample_html)
-        
-        # Assert the result is what we expect
-        self.assertEqual(result, self.expected_listings)
+        with patch.object(Scraper, 'parse_listings', return_value=self.expected_listings) as mock_parse:
+            # Call the method under test
+            result = self.scraper.parse_listings(self.sample_html)
+            
+            # Assert the method was called with the right argument
+            mock_parse.assert_called_once_with(self.sample_html)
+            
+            # Assert the result is what we expect
+            self.assertEqual(result, self.expected_listings)
     
     @patch('requests.get')
     def test_end_to_end_scraping(self, mock_get):
