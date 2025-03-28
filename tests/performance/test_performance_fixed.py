@@ -4,6 +4,7 @@ import os
 import tensorflow as tf
 from tensorflow import keras
 import psutil
+
 def load_model():
     """Load or create a model for testing."""
     model_path = os.path.join('models', 'best_mcp_model.h5')
@@ -12,7 +13,10 @@ def load_model():
     else:
         # Create a simple model for testing
         model = keras.Sequential([
-            keras.layers.Dense(10, activation='relu', input_shape=(10,)),
+            keras.layers.Dense(16, activation='relu', input_shape=(10,)),
+            keras.layers.Dropout(0.3),
+            keras.layers.Dense(8, activation='relu'),
+            keras.layers.Dropout(0.3),
             keras.layers.Dense(1)
         ])
         model.compile(optimizer='adam', loss='mse')
@@ -32,9 +36,9 @@ def test_prediction_speed(benchmark):
     # Load the model first (outside of the benchmark)
     model = load_model()
     
-    # Create sample input data
+    # Create sample input data with correct shape (matching the actual model input shape)
     num_samples = 100
-    input_data = np.random.random((num_samples, 10))
+    input_data = np.random.random((num_samples, 10))  # Changed from 5 to 10 features
     
     # Warm-up run (outside of the benchmark)
     _ = model.predict(input_data[:1])
@@ -69,4 +73,3 @@ def test_model_memory_usage(benchmark):
     # We can add an assertion for memory limits if needed
     # For now, just demonstrate using benchmark
     assert True, f"Memory used by model: {memory_used:.2f} MB"
-
