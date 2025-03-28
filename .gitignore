@@ -43,3 +43,7 @@ ENV/
 data/raw/
 data/processed/
 models/
+
+# Test and coverage files
+.coverage
+output.json
