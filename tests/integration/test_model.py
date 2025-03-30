@@ -16,7 +16,8 @@ class TestModelBasics(unittest.TestCase):
         # Create a very simple model
         model = tf.keras.Sequential(
             [
-                tf.keras.layers.Dense(10, activation="relu", input_shape=(5,)),
+                tf.keras.Input(shape=(5,)),
+                tf.keras.layers.Dense(10, activation="relu"),
                 tf.keras.layers.Dense(1, activation="linear"),
             ]
         )
@@ -38,7 +39,8 @@ class TestModelBasics(unittest.TestCase):
         # Create a simple model
         model = tf.keras.Sequential(
             [
-                tf.keras.layers.Dense(3, activation="relu", input_shape=(2,)),
+                tf.keras.Input(shape=(2,)),
+                tf.keras.layers.Dense(3, activation="relu"),
                 tf.keras.layers.Dense(1),
             ]
         )
@@ -49,9 +51,5 @@ class TestModelBasics(unittest.TestCase):
         # Make a prediction
         prediction = model.predict(sample_input)
 
-        # Convert prediction to scalar if it's a single-element array
-        if prediction.size == 1:
-            prediction = prediction.item()
-
-        # Check that the prediction is a scalar float
-        self.assertIsInstance(prediction, float)
+        # Check that the prediction has the expected shape
+        self.assertEqual(prediction.shape, (1, 1))

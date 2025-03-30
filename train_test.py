@@ -30,7 +30,8 @@ def build_model(input_shape):
     logging.info("Building MCP model architecture")
     model = tf.keras.Sequential(
         [
-            tf.keras.layers.Dense(128, activation="relu", input_shape=(input_shape,)),
+            tf.keras.Input(shape=(input_shape,)),
+            tf.keras.layers.Dense(128, activation="relu"),
             tf.keras.layers.Dropout(0.3),
             tf.keras.layers.Dense(64, activation="relu"),
             tf.keras.layers.Dense(1),

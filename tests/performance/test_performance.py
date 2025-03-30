@@ -16,7 +16,8 @@ def load_model():
         # Create a simple model for testing
         model = keras.Sequential(
             [
-                keras.layers.Dense(10, activation="relu", input_shape=(10,)),
+                keras.Input(shape=(10,)),
+                keras.layers.Dense(10, activation="relu"),
                 keras.layers.Dense(1),
             ]
         )
