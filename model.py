@@ -1,6 +1,5 @@
 import tensorflow as tf
 
-
 def build_model(input_shape):
     model = tf.keras.Sequential(
         [
