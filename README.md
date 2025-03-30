@@ -12,6 +12,13 @@ This project implements a machine learning system for predicting rental prices i
 - **REST API**: FastAPI implementation for real-time price predictions
 - **Testing Framework**: Comprehensive unit, integration, and performance tests
 
+### New Features
+
+- **Enhanced Scraper**: Robust web scraping with error handling and data validation
+- **Neural Network Model**: Configurable architecture with dropout regularization
+- **Comprehensive Testing**: Organized test suite with fixtures and mocks
+- **Structured Data Processing**: Standardized pipeline for data cleaning and feature engineering
+
 ## Installation
 
 ### Prerequisites
@@ -19,6 +26,8 @@ This project implements a machine learning system for predicting rental prices i
 - Python 3.8+
 - pip (Python package manager)
 - Virtual environment tool (venv, conda, etc.)
+- TensorFlow 2.x
+- scikit-learn
 
 ### Setup Instructions
 
@@ -107,6 +116,20 @@ model, history, metrics = train_model(
 print(f"Model evaluation: {metrics}")
 ```
 
+## Model Components
+
+The project includes a robust neural network model implementation:
+```python
+from nyc_rental_price.models.model import create_model
+
+# Create a model with custom architecture
+model = create_model(
+    input_dim=10,
+    hidden_layers=[64, 32],
+    dropout_rate=0.2
+)
+```
+
 ### Using the API
 
 #### Running the API server
@@ -180,6 +203,18 @@ pytest
 pytest tests/unit
 pytest tests/integration
 pytest tests/performance
+```
+
+## Test Organization
+
+```
+tests/
+├── unit/               # Unit tests for individual components
+│   ├── test_scraper.py
+│   └── test_model.py
+├── integration/        # Integration tests
+├── performance/        # Performance benchmarks
+└── conftest.py         # Shared test fixtures
 ```
 
 ### Contributing

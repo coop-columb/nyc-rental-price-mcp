@@ -8,60 +8,88 @@ Phase 3 focuses on developing a modular neural network model for predicting NYC 
 
 ### Base Model (model.py)
 
-The base model architecture is defined in `model.py` as a sequential neural network with the following layers:
+The base model architecture is defined in `model.py` as a configurable neural network with the following features:
 
-- Input layer: Dense layer with 64 neurons and ReLU activation
-- Hidden layer: Dense layer with 32 neurons and ReLU activation
-- Output layer: Single neuron for regression (predicting rental price)
+- Flexible input layer size based on feature dimensionality
+- Configurable hidden layer architecture through a list of layer sizes
+- Dropout layers for regularization
+- Single output neuron for regression
 
 ```python
-def build_model(input_shape):
-    model = tf.keras.Sequential([
-        tf.keras.layers.Dense(64, activation='relu', input_shape=input_shape),
-        tf.keras.layers.Dense(32, activation='relu'),
-        tf.keras.layers.Dense(1)
-    ])
-    model.compile(optimizer='adam', loss='mse', metrics=['mae'])
+def create_model(input_dim, hidden_layers=[64, 32], dropout_rate=0.2):
+    """Create a neural network model for rental price prediction.
+    
+    Args:
+        input_dim (int): Number of input features
+        hidden_layers (list): List of integers for number of units in each hidden layer
+        dropout_rate (float): Dropout rate between layers
+    
+    Returns:
+        tf.keras.Model: Compiled neural network model
+    """
+    model = Sequential()
+    
+    # Input layer
+    model.add(Dense(hidden_layers[0], activation='relu', input_dim=input_dim))
+    model.add(Dropout(dropout_rate))
+    
+    # Hidden layers
+    for units in hidden_layers[1:]:
+        model.add(Dense(units, activation='relu'))
+        model.add(Dropout(dropout_rate))
+    
+    # Output layer
+    model.add(Dense(1))  # Single output for price prediction
+    
+    model.compile(optimizer=Adam(), loss='mse', metrics=['mae'])
     return model
 ```
 
-### Enhanced MCP Model (train_test.py)
+### Model Management
 
-For the training and evaluation pipeline, we implemented an enhanced version of the model in `train_test.py` with:
+The model implementation includes robust model management functions:
 
-- Input layer: Dense layer with 128 neurons and ReLU activation
-- Dropout layer (30% dropout rate) for regularization
-- Hidden layer: Dense layer with 64 neurons and ReLU activation
-- Output layer: Single neuron for regression
+- `save_model(model, path)`: Save trained models to disk
+- `load_model(path)`: Load trained models for inference
+- Proper error handling and validation
 
 ```python
-def build_model(input_shape):
-    model = tf.keras.Sequential([
-        tf.keras.layers.Dense(128, activation='relu', input_shape=(input_shape,)),
-        tf.keras.layers.Dropout(0.3),
-        tf.keras.layers.Dense(64, activation='relu'),
-        tf.keras.layers.Dense(1)
-    ])
-    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
-                  loss='mse',
-                  metrics=['mae'])
-    return model
+def save_model(model, path):
+    """Save a trained model to disk.
+    
+    Args:
+        model (tf.keras.Model): Trained model to save
+        path (str): Path where to save the model
+    """
+    model.save(path)
+
+def load_model(path):
+    """Load a trained model from disk.
+    
+    Args:
+        path (str): Path to the saved model
+    
+    Returns:
+        tf.keras.Model: Loaded model
+    """
+    return tf.keras.models.load_model(path)
 ```
 
 ## Hyperparameter Choices
 
-The model training process incorporates several key hyperparameters:
+The model training process now supports configurable hyperparameters:
 
-- **Optimizer**: Adam optimizer with a learning rate of 0.001
+- **Hidden Layer Architecture**: Customizable through `hidden_layers` parameter
+- **Dropout Rate**: Adjustable regularization strength
+- **Optimizer**: Adam optimizer with configurable learning rate
 - **Loss Function**: Mean Squared Error (MSE)
 - **Metrics**: Mean Absolute Error (MAE)
 - **Batch Size**: 32
 - **Epochs**: 100 (with early stopping)
 - **Validation Split**: 20% of training data reserved for validation
 - **Early Stopping**: Patience of 15 epochs monitoring validation loss
-- **Dropout Rate**: 30% dropout for regularization
 
-These hyperparameters were chosen to balance model complexity, training speed, and generalization capability.
+These hyperparameters were chosen to balance model complexity, training speed, and generalization capability. The configurable nature of the model allows for easy experimentation with different architectures and regularization strengths.
 
 ## Data Preprocessing
 
@@ -109,13 +137,15 @@ The model performance is evaluated using:
 
 1. **Mean Absolute Error (MAE)**: Measures the average magnitude of errors without considering direction
 2. **Root Mean Square Error (RMSE)**: Gives higher weight to larger errors, calculated as the square root of MSE
+3. **R-squared (R²)**: Coefficient of determination, indicating the proportion of variance explained by the model
 
 ```python
 def evaluate_model(model, X_test, y_test):
     predictions = model.predict(X_test)
     mae = mean_absolute_error(y_test, predictions)
     rmse = np.sqrt(mean_squared_error(y_test, predictions))
-    return {'mae': mae, 'rmse': rmse}
+    r2 = r2_score(y_test, predictions)
+    return {'mae': mae, 'rmse': rmse, 'r2': r2}
 ```
 
 ## Logging
