@@ -1,3 +1,35 @@
+"""Scraper module for fetching rental listings."""
+
+import requests
+from bs4 import BeautifulSoup
+
+class Scraper:
+    def __init__(self, base_url=None):
+        """Initialize scraper with base URL."""
+        self.base_url = base_url or "https://example.com"
+
+    def fetch_page(self, url=None):
+        """Fetch HTML content from a URL."""
+        target_url = url or self.base_url
+        response = requests.get(target_url)
+        response.raise_for_status()
+        return response.text
+
+    def parse_listings(self, html_content):
+        """Parse HTML to extract rental listings."""
+        soup = BeautifulSoup(html_content, 'html.parser')
+        listings = []
+        
+        for listing_div in soup.find_all('div', class_='listing'):
+            listing = {
+                'title': listing_div.find('h2').text.strip(),
+                'price': listing_div.find('p', class_='price').text.strip(),
+                'location': listing_div.find('p', class_='location').text.strip()
+            }
+            listings.append(listing)
+        
+        return listings
+
 from typing import Any, Dict, List, Optional
 
 import requests

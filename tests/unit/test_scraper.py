@@ -6,7 +6,7 @@ import pytest
 # Assuming we have a scraper module with a Scraper class
 # If the structure is different, this test should be adapted
 try:
-    from scraper import Scraper
+    from nyc_rental_price.data.scraper import Scraper
 except ImportError:
     # Create a placeholder for testing purposes
     class Scraper:

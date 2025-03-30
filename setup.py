@@ -1,62 +1,23 @@
 from setuptools import setup, find_packages
-
-setup(
-    name="nyc-rental-price",
-    version="0.1.0",
-    description="Machine learning model for predicting NYC rental prices",
-    long_description=open("README.md").read() if open("README.md") else "",
-    long_description_content_type="text/markdown",
-    author="Data Science Team",
-    author_email="datascience@example.com",
-    url="https://github.com/yourusername/nyc-rental-price",
-    packages=find_packages(where="src"),
-    package_dir={"": "src"},
-    python_requires=">=3.7",
-    install_requires=[
-        "pandas>=1.0.0",
-        "numpy>=1.18.0",
-        "scikit-learn>=0.24.0",
-        "torch>=1.8.0",
-        "fastapi>=0.68.0",
-        "uvicorn>=0.15.0",
-    ],
-    extras_require={
-        "dev": [
-            "pytest>=6.0.0",
-            "pytest-cov>=2.12.0",
-            "black>=21.5b2",
-            "flake8>=3.9.0",
-            "mypy>=0.812",
-            "isort>=5.9.0",
-        ],
-    },
-    classifiers=[
-        "Development Status :: 3 - Alpha",
-        "Intended Audience :: Developers",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    ],
-    keywords="nyc, rental, price, prediction, machine learning, pytorch",
-)
-
-from setuptools import setup, find_packages
 import os
 
-# Read version from __init__.py
+# Read version from __init__.py or use default
 version_file = os.path.join("src", "nyc_rental_price", "__init__.py")
-with open(version_file, "r") as f:
-    line = [l.strip() for l in f.readlines() if l.startswith("__version__")]
-    if line:
-        version = line[0].split("=")[1].strip().strip('"\'')
-    else:
-        version = "0.1.0"
+version = "0.1.0"
+try:
+    with open(version_file, "r") as f:
+        lines = [l.strip() for l in f.readlines() if l.startswith("__version__")]
+        if lines:
+            version = lines[0].split("=")[1].strip().strip('"\'')
+except (FileNotFoundError, IOError):
+    pass
 
 # Read long description from README
-with open("README.md", "r", encoding="utf-8") as f:
-    long_description = f.read()
+try:
+    with open("README.md", "r", encoding="utf-8") as f:
+        long_description = f.read()
+except (FileNotFoundError, IOError):
+    long_description = "NYC Rental Price Prediction Project"
 
 setup(
     name="nyc_rental_price",
@@ -120,49 +81,6 @@ setup(
         ],
     },
     include_package_data=True,
+    keywords="nyc, rental, price, prediction, machine learning, pytorch, tensorflow",
     zip_safe=False,
 )
-
-from setuptools import setup, find_packages
-
-# Read the content of README.md
-try:
-    with open("README.md", "r", encoding="utf-8") as fh:
-        long_description = fh.read()
-except FileNotFoundError:
-    long_description = "NYC Rental Price Prediction Project"
-
-setup(
-    name="nyc_rental_price",
-    version="0.1.0",
-    author="",
-    author_email="",
-    description="NYC Rental Price Prediction Project",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="",
-    packages=find_packages(where="src"),
-    package_dir={"": "src"},
-    classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
-    ],
-    python_requires=">=3.6",
-    install_requires=[
-        "tensorflow",
-        "pandas",
-        "numpy",
-        "scikit-learn",
-        "fastapi",
-        "uvicorn",
-    ],
-    extras_require={
-        "dev": [
-            "pytest",
-            "black",
-            "flake8",
-        ],
-    },
-)
-
