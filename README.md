@@ -1,64 +1,198 @@
-# Project Plan for NYC Rental Price MCP
+# NYC Rental Price Prediction Project
 
-## Phase 0: Repository Initialization and Environment Setup
-1. **Create Git Repository:**
-   - Initialize a new Git repository with `git init`.
-   - Add a `.gitignore` file and commit the initial setup.
+## Overview
 
-2. **Project Directories Setup:**
-   - Create necessary directories: `src`, `data`, and `docs`.
-   - Use the command, for example: `mkdir src data docs`.
+This project implements a machine learning system for predicting rental prices in New York City. Using historical rental data, the system leverages neural networks to provide accurate price predictions based on apartment features and location data.
 
-3. **Environment Setup:**
-   - Set up a virtual environment using Python: `python -m venv venv`.
-   - Activate the virtual environment (e.g., `source venv/bin/activate` for UNIX systems).
-   - Install essential libraries using a `requirements.txt` file: `pip install -r requirements.txt`.
+### Key Features
 
-## Phase 1: Documentation of Data Acquisition
-1. **Create Documentation:**
-   - Create `docs/phase1.md` using `touch docs/phase1.md`.
+- **Data Processing Pipeline**: Robust preprocessing of NYC rental data with missing value handling
+- **Neural Network Model**: TensorFlow/Keras-based sequential model with dense layers
+- **Model Training**: Complete pipeline with early stopping and checkpointing
+- **REST API**: FastAPI implementation for real-time price predictions
+- **Testing Framework**: Comprehensive unit, integration, and performance tests
 
-2. **Document Objectives & Methodologies:**
-   - Include detailed objectives for data acquisition.
-   - Outline the methodologies and tools planned for use.
-   - Provide examples or sample scripts if possible.
+## Installation
 
-## Phase 2: Documentation of Preprocessing Steps
-1. **Create Documentation:**
-   - Create `docs/phase2.md` with `touch docs/phase2.md`.
+### Prerequisites
 
-2. **Document Preprocessing Steps:**
-   - Describe preprocessing techniques and why they are chosen.
-   - Provide code snippets and sample data if relevant.
-   
-## Phase 4: API Creation, Dockerization, Deployment
-1. **Create Documentation:**
-   - Create `docs/phase4.md` using `touch docs/phase4.md`.
+- Python 3.8+
+- pip (Python package manager)
+- Virtual environment tool (venv, conda, etc.)
 
-2. **API Creation Instructions:**
-   - Describe the process for API development.
-   - List the technologies and libraries used.
+### Setup Instructions
 
-3. **Dockerization Guidelines:**
-   - Include Dockerfile examples and setup instructions.
-   - Explain the process of containerizing the application.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/nyc-rental-price-mcp.git
+   cd nyc-rental-price-mcp
+   ```
 
-4. **Deployment Procedures:**
-   - Outline the deployment steps in detail.
-   - Set up CI/CD using GitHub Actions and document each workflow stage.
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
 
-5. **Continuous Integration and Deployment:**
-   - Add `.github/workflows/ci-cd.yaml` with the necessary CI/CD pipeline configuration.
+3. Install the package in development mode:
+   ```bash
+   pip install -e .
+   ```
 
-# NYC Rental Price Project
+4. Install development dependencies:
+   ```bash
+   pip install -e ".[dev]"
+   ```
 
-A data science project for analyzing NYC rental prices.
+## Project Structure
 
-## Project Status
+```
+nyc-rental-price-mcp/
+├── data/                      # Data storage
+│   ├── raw/                   # Original, immutable data
+│   ├── interim/               # Intermediate processing data
+│   └── processed/             # Final data for modeling
+├── models/                    # Trained model files
+├── notebooks/                 # Jupyter notebooks for exploration
+├── src/                       # Source code package
+│   └── nyc_rental_price/      # Main package
+│       ├── data/              # Data processing modules
+│       │   ├── preprocessing.py  # Data cleaning and transformation
+│       │   └── scraper.py     # Data collection utilities
+│       ├── models/            # Model definition and training
+│       │   ├── model.py       # Neural network architecture
+│       │   └── train.py       # Training and evaluation pipeline
+│       ├── features/          # Feature engineering
+│       └── api/               # API implementation
+│           └── main.py        # FastAPI endpoints
+├── tests/                     # Test suite
+│   ├── unit/                  # Unit tests
+│   ├── integration/           # Integration tests
+│   └── performance/           # Performance tests
+├── docs/                      # Documentation
+├── setup.py                   # Package installation configuration
+├── pyproject.toml             # Development tool configuration
+└── README.md                  # Project documentation
+```
 
-### Phase 4 Implementation Complete
-- **Enhanced CI/CD Workflow:** Implemented robust continuous integration and deployment pipeline with GitHub Actions
-- **Testing Framework Improvements:** Added comprehensive unit tests for model functionality, data preprocessing, and web scraping
-- **Documentation Updates:** Expanded project documentation with detailed information about CI/CD processes
-- **Docker Integration:** Improved Dockerization with automated builds and deployments
-- **Dependency Management:** Updated and fixed project dependencies for consistent builds
+## Usage Examples
+
+### Data Processing
+
+```python
+from nyc_rental_price.data.preprocessing import preprocess_rental_data
+
+# Load and preprocess data
+processed_data = preprocess_rental_data('data/raw/rental_listings.csv')
+processed_data.to_csv('data/processed/cleaned_data.csv', index=False)
+```
+
+### Model Training
+
+```python
+from nyc_rental_price.models.train import train_model
+from nyc_rental_price.data.preprocessing import load_processed_data
+
+# Load processed data
+X_train, X_test, y_train, y_test = load_processed_data('data/processed/cleaned_data.csv')
+
+# Train the model
+model, history, metrics = train_model(
+    X_train, y_train, X_test, y_test,
+    epochs=100,
+    batch_size=32,
+    model_path='models/rental_price_model.h5'
+)
+
+print(f"Model evaluation: {metrics}")
+```
+
+### Using the API
+
+#### Running the API server
+```bash
+uvicorn nyc_rental_price.api.main:app --reload
+```
+
+#### Making predictions
+```python
+import requests
+import json
+
+# Example rental property data
+property_data = {
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "sqft": 850,
+    "neighborhood": "Williamsburg",
+    "has_elevator": True,
+    "has_doorman": False,
+    "has_dishwasher": True,
+    "has_laundry": True
+}
+
+# Send request to API
+response = requests.post(
+    "http://localhost:8000/predict",
+    json=property_data
+)
+
+# View predicted price
+result = response.json()
+print(f"Predicted monthly rent: ${result['predicted_price']:.2f}")
+```
+
+## Development Guidelines
+
+### Setting Up Development Environment
+
+1. Install development dependencies:
+   ```bash
+   pip install -e ".[dev]"
+   ```
+
+2. Install pre-commit hooks:
+   ```bash
+   pre-commit install
+   ```
+
+### Code Style
+
+This project uses:
+- Black for code formatting
+- Flake8 for linting
+- Type hints for better code quality
+
+Run formatting and linting:
+```bash
+black src tests
+flake8 src tests
+```
+
+### Testing
+
+Run tests:
+```bash
+# Run all tests
+pytest
+
+# Run specific test suite
+pytest tests/unit
+pytest tests/integration
+pytest tests/performance
+```
+
+### Contributing
+
+1. Create a feature branch from `main`
+2. Make your changes
+3. Add or update tests as necessary
+4. Ensure all tests pass
+5. Submit a pull request
+
+### Documentation
+
+When adding new features, be sure to:
+- Add docstrings to all functions and classes
+- Update the README.md if necessary
+- Consider adding a notebook example if applicable
