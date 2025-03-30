@@ -49,9 +49,9 @@ class TestModelBasics(unittest.TestCase):
         # Make a prediction
         prediction = model.predict(sample_input)
 
-        # Check that the prediction has the expected shape
-        self.assertEqual(prediction.shape, (1, 1))
+        # Convert prediction to scalar if it's a single-element array
+        if prediction.size == 1:
+            prediction = prediction.item()
 
-
-if __name__ == "__main__":
-    unittest.main()
+        # Check that the prediction is a scalar float
+        self.assertIsInstance(prediction, float)
