@@ -1,6 +1,7 @@
 # NYC Rental Price Prediction Project Roadmap
 
 ## Current Status (v0.1.0)
+
 - ✅ Basic project structure established
 - ✅ Scraper implementation complete
 - ✅ Initial model architecture implemented
@@ -10,6 +11,7 @@
 ## Phase 6: Production Readiness
 
 ### 6.1 API Enhancement (Q2 2025)
+
 - [ ] Implement RESTful endpoints for:
   - Model retraining
   - Batch predictions
@@ -20,6 +22,7 @@
 - [ ] Create API documentation using OpenAPI/Swagger
 
 ### 6.2 Model Optimization (Q2 2025)
+
 - [ ] Implement model versioning system
 - [ ] Add A/B testing capabilities
 - [ ] Optimize model architecture:
@@ -30,6 +33,7 @@
 - [ ] Implement automated retraining pipeline
 
 ### 6.3 Data Pipeline Enhancement (Q3 2025)
+
 - [ ] Create automated data collection pipeline
 - [ ] Implement data validation checks:
   - Schema validation
@@ -40,6 +44,7 @@
 - [ ] Implement feature store
 
 ### 6.4 Infrastructure (Q3 2025)
+
 - [ ] Containerize application:
   - Create production Dockerfile
   - Implement Docker Compose for local development
@@ -55,6 +60,7 @@
 ## Phase 7: Scale and Optimize (Q4 2025)
 
 ### 7.1 Performance Optimization
+
 - [ ] Implement caching:
   - Model predictions
   - API responses
@@ -64,6 +70,7 @@
 - [ ] Implement batch processing
 
 ### 7.2 Feature Enhancement
+
 - [ ] Add support for:
   - Multiple model types
   - Ensemble methods
@@ -73,6 +80,7 @@
 - [ ] Create interactive visualizations
 
 ### 7.3 Security Enhancements
+
 - [ ] Implement:
   - JWT authentication
   - Role-based access control
@@ -84,6 +92,7 @@
 ## Phase 8: Production Deployment (Q1 2026)
 
 ### 8.1 Cloud Infrastructure
+
 - [ ] Set up cloud environment:
   - Kubernetes cluster
   - Load balancers
@@ -92,6 +101,7 @@
 - [ ] Set up backup and disaster recovery
 
 ### 8.2 Documentation and Training
+
 - [ ] Create:
   - API documentation
   - System architecture docs
@@ -101,6 +111,7 @@
 - [ ] Create training materials
 
 ### 8.3 Maintenance and Support
+
 - [ ] Establish:
   - Support procedures
   - Issue tracking
@@ -111,6 +122,7 @@
 ## Future Considerations (Post Q1 2026)
 
 ### Extended Features
+
 - Advanced visualization dashboard
 - Mobile application
 - Integration with external services
@@ -118,12 +130,14 @@
 - Historical trend analysis
 
 ### Research and Development
+
 - Experiment with new ML architectures
 - Investigate transfer learning
 - Research automated ML techniques
 - Explore unsupervised learning methods
 
 ### Business Development
+
 - Market analysis tools
 - Competitor price tracking
 - Customer feedback integration
@@ -132,12 +146,14 @@
 ## Success Metrics
 
 ### Technical Metrics
+
 - Model accuracy (MAE, RMSE, R²)
 - API response time
 - System uptime
 - Error rates
 
 ### Business Metrics
+
 - User adoption rate
 - Prediction accuracy
 - Customer satisfaction
@@ -146,23 +162,26 @@
 ## Risk Management
 
 ### Technical Risks
+
 - Data quality issues
 - Model drift
 - System scalability
 - Security vulnerabilities
 
 ### Business Risks
+
 - Market changes
 - Competition
 - Regulatory compliance
 - Resource constraints
 
 ## Review and Update Process
+
 This roadmap will be reviewed and updated quarterly to ensure:
+
 - Alignment with business goals
 - Technical feasibility
 - Resource availability
 - Market demands
 
 Last Updated: March 30, 2025
-

@@ -6,7 +6,7 @@ This document outlines the Git workflow for the NYC Rental Price Prediction proj
 
 We follow a modified Git Flow workflow:
 
-```
+```bash
 main (production-ready code)
 ├── develop (integration branch)
 │   ├── feature/feature-name
@@ -32,7 +32,7 @@ main (production-ready code)
 
 We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
 
-```
+```structure
 <type>(<scope>): <description>
 
 [optional body]
