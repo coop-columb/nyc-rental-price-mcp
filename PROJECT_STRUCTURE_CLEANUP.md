@@ -5,12 +5,14 @@ This document outlines the changes made to clean up the project structure and im
 ## 1. Directory Structure Cleanup
 
 ### Removed Duplicate Directories
+
 - Removed `src/models` (duplicate of `src/nyc_rental_price/models`)
 - Removed `src/api` (duplicate of `src/nyc_rental_price/api`)
 - Removed `src/app` (empty directory with only `__init__.py`)
 - Removed `src/data_processing` (duplicate of `src/nyc_rental_price/data`)
 
 ### Consolidated Test Files
+
 - Removed duplicate test files at the root level of `tests/`
 - Moved `tests/test_setup.py` to `tests/integration/test_setup.py`
 - Renamed `tests/performance/test_performance_fixed.py` to `tests/performance/test_performance.py`
@@ -19,6 +21,7 @@ This document outlines the changes made to clean up the project structure and im
 ## 2. Git Configuration
 
 ### GitHub Actions Workflow
+
 - Added CI workflow in `.github/workflows/ci.yml`
 - Set up jobs for testing and linting
 - Configured matrix testing for Python 3.9, 3.10, and 3.11
@@ -27,7 +30,7 @@ This document outlines the changes made to clean up the project structure and im
 
 The project now follows a cleaner structure:
 
-```
+```markdown
 nyc-rental-price-mcp/
 ├── .github/            # GitHub configuration files
 │   └── workflows/      # GitHub Actions workflows
