@@ -1,362 +1,337 @@
-"""Data preprocessing module for NYC rental price prediction.
+"""Data preprocessing module for NYC rental price prediction."""
 
-This module provides functions for cleaning and preparing rental listings data.
-"""
+__all__ = [
+    "load_data",
+    "preprocess_data",
+    "clean_data",
+    "engineer_additional_features",
+    "process_features",
+]
 
+import argparse
 import logging
-import re
+import os
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-from src.nyc_rental_price.features import FeaturePipeline
-
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
-def load_data(filepath: str) -> pd.DataFrame:
-    """Load rental listings data from a CSV file.
+def load_data(data_path: str) -> pd.DataFrame:
+    """Load data from a CSV file.
 
     Args:
-        filepath: Path to the CSV file
+        data_path: Path to the CSV file
 
     Returns:
-        DataFrame with rental listings data
+        Loaded DataFrame
     """
-    logger.info(f"Loading data from {filepath}")
-
-    try:
-        df = pd.read_csv(filepath)
-        logger.info(f"Loaded {len(df)} listings from {filepath}")
-        return df
-    except Exception as e:
-        logger.error(f"Error loading data from {filepath}: {str(e)}")
-        return pd.DataFrame()
+    logger.info(f"Loading data from {data_path}")
+    return pd.read_csv(data_path)
 
 
-def clean_data(df: pd.DataFrame) -> pd.DataFrame:
-    """Clean rental listings data.
+def preprocess_data(input_path, output_path, engineer_features=False):
+    """Preprocess raw rental data for model training.
 
     Args:
-        df: DataFrame with rental listings data
+        input_path: Path to input CSV file
+        output_path: Path to save processed data
+        engineer_features: Whether to create additional features
+
+    Returns:
+        Processed DataFrame
+    """
+    logger.info(f"Loading data from {input_path}")
+    df = load_data(input_path)
+
+    # Basic cleaning
+    logger.info("Cleaning data")
+    df = clean_data(df)
+
+    # Feature engineering
+    if engineer_features:
+        logger.info("Engineering features")
+        df = engineer_additional_features(df)
+
+    # Process features
+    logger.info("Processing features")
+    df_processed = process_features(df)
+
+    # Save processed data
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    df_processed.to_csv(output_path, index=False)
+    logger.info(f"Saved processed data to {output_path}")
+
+    return df_processed
+
+
+def clean_data(df):
+    """Clean the raw data.
+
+    Args:
+        df: Raw DataFrame
 
     Returns:
         Cleaned DataFrame
     """
-    logger.info(f"Cleaning {len(df)} rental listings")
+    # Make a copy
+    df = df.copy()
 
-    # Create a copy of the input DataFrame
-    result_df = df.copy()
-
-    # Standardize column names
-    result_df.columns = [col.lower().replace(" ", "_") for col in result_df.columns]
-
-    # Clean price column
-    if "price" in result_df.columns:
-        # Extract numeric price
-        result_df["price"] = (
-            result_df["price"]
-            .astype(str)
-            .str.replace(r"[^\d]", "", regex=True)
-            .replace("", np.nan)
-        )
-
-        # Convert to numeric
-        result_df["price"] = pd.to_numeric(result_df["price"], errors="coerce")
-
-        # Remove rows with invalid prices
-        valid_price_mask = (
-            result_df["price"].notna()
-            & (result_df["price"] > 0)
-            & (result_df["price"] < 100000)  # Upper limit for NYC rentals
-        )
-
-        result_df = result_df[valid_price_mask].reset_index(drop=True)
-        logger.info(f"Removed {len(df) - len(result_df)} listings with invalid prices")
-
-    # Clean bedrooms and bathrooms
-    for col in ["bedrooms", "bathrooms"]:
-        if col in result_df.columns:
-            # Extract numeric values
-            result_df[col] = (
-                result_df[col]
-                .astype(str)
-                .str.replace(r"[^\d\.]", "", regex=True)
-                .replace("", np.nan)
-            )
-
-            # Convert to numeric
-            result_df[col] = pd.to_numeric(result_df[col], errors="coerce")
-
-            # Set reasonable limits
-            min_val = 0
-            max_val = 10 if col == "bedrooms" else 8
-
-            # Apply limits
-            result_df[col] = result_df[col].clip(min_val, max_val)
-
-    # Clean square footage
-    if "sqft" in result_df.columns:
-        # Extract numeric values
-        result_df["sqft"] = (
-            result_df["sqft"]
-            .astype(str)
-            .str.replace(r"[^\d]", "", regex=True)
-            .replace("", np.nan)
-        )
-
-        # Convert to numeric
-        result_df["sqft"] = pd.to_numeric(result_df["sqft"], errors="coerce")
-
-        # Set reasonable limits for NYC apartments
-        result_df["sqft"] = result_df["sqft"].clip(100, 10000)
-
-    # Clean neighborhood
-    if "neighborhood" in result_df.columns:
-        # Convert to string and lowercase
-        result_df["neighborhood"] = (
-            result_df["neighborhood"]
-            .astype(str)
-            .str.lower()
-            .str.strip()
-            .replace("nan", np.nan)
-        )
-
-        # Remove rows with missing neighborhoods
-        result_df = result_df[result_df["neighborhood"].notna()].reset_index(drop=True)
+    # Drop rows where price is NaN
+    if "price" in df.columns:
+        df = df.dropna(subset=["price"])
         logger.info(
-            f"Removed {len(df) - len(result_df)} listings with missing neighborhoods"
+            f"Dropped {len(df) - len(df.dropna(subset=['price']))} rows with missing price values"
         )
 
-    # Remove duplicate listings
-    if "id" in result_df.columns:
-        # Remove duplicates by ID
-        result_df = result_df.drop_duplicates(subset=["id"]).reset_index(drop=True)
-        logger.info(f"Removed duplicate listings, remaining: {len(result_df)}")
+    # Handle missing values
+    for col in df.select_dtypes(include=["number"]).columns:
+        df[col] = df[col].fillna(df[col].median())
 
-    # Fill missing values
-    for col in result_df.columns:
-        if result_df[col].dtype == "object":
-            result_df[col] = result_df[col].fillna("")
-        elif pd.api.types.is_numeric_dtype(result_df[col]):
-            # For numeric columns, fill with median
-            result_df[col] = result_df[col].fillna(result_df[col].median())
+    # Convert categorical columns to string
+    for col in df.select_dtypes(include=["object"]).columns:
+        df[col] = df[col].fillna("Unknown")
 
-    logger.info(f"Cleaned data contains {len(result_df)} listings")
+    # Remove outliers (simple method)
+    for col in ["price", "sqft"]:
+        if col in df.columns:
+            q1 = df[col].quantile(0.01)
+            q3 = df[col].quantile(0.99)
+            df = df[(df[col] >= q1) & (df[col] <= q3)]
 
-    return result_df
-
-
-def combine_data_sources(filepaths: List[str]) -> pd.DataFrame:
-    """Combine rental listings data from multiple sources.
-
-    Args:
-        filepaths: List of paths to CSV files
-
-    Returns:
-        Combined DataFrame
-    """
-    logger.info(f"Combining data from {len(filepaths)} sources")
-
-    all_data = []
-
-    for filepath in filepaths:
-        # Load data from this source
-        df = load_data(filepath)
-
-        if len(df) > 0:
-            # Add source column if not present
-            if "source" not in df.columns:
-                source_name = Path(filepath).stem.split("_")[0]
-                df["source"] = source_name
-
-            all_data.append(df)
-
-    if not all_data:
-        logger.warning("No data loaded from any source")
-        return pd.DataFrame()
-
-    # Combine all data
-    combined_df = pd.concat(all_data, ignore_index=True)
-    logger.info(f"Combined data contains {len(combined_df)} listings")
-
-    return combined_df
+    return df
 
 
-def generate_features(
-    df: pd.DataFrame, pipeline: Optional[FeaturePipeline] = None
-) -> pd.DataFrame:
-    """Generate features for rental listings using the feature pipeline.
+def engineer_additional_features(df):
+    """Create additional features.
 
     Args:
-        df: DataFrame with rental listings data
-        pipeline: Optional feature pipeline instance
+        df: DataFrame with basic features
 
     Returns:
-        DataFrame with generated features
+        DataFrame with additional features
     """
-    logger.info(f"Generating features for {len(df)} listings")
+    # Make a copy
+    df = df.copy()
 
-    if pipeline is None:
-        # Create a new pipeline
-        pipeline = FeaturePipeline()
+    # Price per square foot
+    if "price" in df.columns and "sqft" in df.columns:
+        # Convert sqft to float and handle NaN/zero values
+        df["sqft"] = pd.to_numeric(df["sqft"], errors="coerce").astype(np.float64)
+        df["price"] = df["price"].astype(np.float64)
 
-    # Generate features
-    try:
-        # Check if pipeline is already fitted
-        is_fitted = hasattr(pipeline, "feature_columns") and pipeline.feature_columns
+        # Calculate price_per_sqft only for valid entries
+        mask = (df["sqft"] > 0) & df["sqft"].notna() & df["price"].notna()
 
-        if is_fitted:
-            # Transform data
-            features_df = pipeline.transform(df)
+        # Initialize price_per_sqft with NaN
+        df["price_per_sqft"] = pd.Series(np.nan, index=df.index, dtype=np.float64)
+
+        if mask.any():
+            # Calculate for valid entries
+            df.loc[mask, "price_per_sqft"] = (
+                df.loc[mask, "price"] / df.loc[mask, "sqft"]
+            ).astype(np.float64)
+
+            # Get median for valid entries
+            median_price_per_sqft = df.loc[mask, "price_per_sqft"].median()
+
+            # Fill NaN values with median
+            df["price_per_sqft"] = df["price_per_sqft"].fillna(median_price_per_sqft)
+
+        logger.info(
+            f"Created price_per_sqft feature with {df['price_per_sqft'].isna().sum()} NaN values"
+        )
+        logger.info(f"Price per sqft dtype: {df['price_per_sqft'].dtype}")
+
+        if not df["price_per_sqft"].isna().all():
+            logger.info(
+                f"Price per sqft range: {df['price_per_sqft'].min():.2f} - {df['price_per_sqft'].max():.2f}"
+            )
         else:
-            # Fit and transform
-            features_df = pipeline.fit(df).transform(df)
+            logger.warning("Price per sqft has all NaN values")
 
-        logger.info(f"Generated features, result shape: {features_df.shape}")
-        return features_df
-    except Exception as e:
-        logger.error(f"Error generating features: {str(e)}")
-        return df
+    # Total rooms
+    if "bedrooms" in df.columns and "bathrooms" in df.columns:
+        df["bedrooms"] = (
+            pd.to_numeric(df["bedrooms"], errors="coerce").fillna(0).astype(np.float64)
+        )
+        df["bathrooms"] = (
+            pd.to_numeric(df["bathrooms"], errors="coerce").fillna(0).astype(np.float64)
+        )
+        df["total_rooms"] = (df["bedrooms"] + df["bathrooms"]).astype(np.float64)
+        logger.info(
+            f"Created total_rooms feature with range: {df['total_rooms'].min():.1f} - {df['total_rooms'].max():.1f}"
+        )
+
+    # Amenities
+    all_amenity_cols = [
+        "has_doorman",
+        "has_elevator",
+        "has_dishwasher",
+        "has_washer_dryer",
+        "is_furnished",
+        "has_balcony",
+        "has_parking",
+    ]
+
+    # Find existing amenity columns
+    existing_amenities = [col for col in all_amenity_cols if col in df.columns]
+
+    if existing_amenities:
+        # Process each amenity
+        for col in existing_amenities:
+            df[col] = df[col].fillna(False).astype(bool).astype(np.float64)
+
+        # Calculate total amenities
+        df["amenities_count"] = df[existing_amenities].sum(axis=1).astype(np.float64)
+
+        logger.info(
+            f"Created amenities_count feature from {len(existing_amenities)} amenities"
+        )
+        logger.info(
+            f"Amenities count range: {df['amenities_count'].min():.0f} - {df['amenities_count'].max():.0f}"
+        )
+
+    logger.info(f"Engineered features shape: {df.shape}")
+    return df
 
 
-def split_data(
-    df: pd.DataFrame,
-    target_column: str = "price",
-    test_size: float = 0.2,
-    val_size: float = 0.1,
-    random_state: int = 42,
-) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.Series, pd.Series, pd.Series]:
-    """Split data into training, validation, and test sets.
+def process_features(df):
+    """Process features for model training.
 
     Args:
-        df: DataFrame with rental listings data
-        target_column: Name of the target column
-        test_size: Proportion of data to use for testing
-        val_size: Proportion of data to use for validation
-        random_state: Random seed for reproducibility
+        df: DataFrame with features
 
     Returns:
-        Tuple of (X_train, X_val, X_test, y_train, y_val, y_test)
+        Processed DataFrame with features ready for model training
     """
-    from sklearn.model_selection import train_test_split
+    # Make a copy
+    df = df.copy()
 
-    logger.info(f"Splitting data with test_size={test_size}, val_size={val_size}")
+    # Extract target variable first and preserve index
+    if "price" in df.columns:
+        target = df["price"].astype(np.float64)
+        X = df.drop(columns=["price"])
+        logger.info(f"Extracted price column with {target.isna().sum()} NaN values")
+    else:
+        target = None
+        X = df.copy()
+        logger.info("No price column found")
 
-    # Ensure target column exists
-    if target_column not in df.columns:
-        raise ValueError(f"Target column '{target_column}' not found in data")
+    # Identify categorical and numerical columns
+    categorical_cols = X.select_dtypes(include=["object"]).columns.tolist()
+    numerical_cols = X.select_dtypes(include=["number"]).columns.tolist()
 
-    # Separate features and target
-    X = df.drop(target_column, axis=1)
-    y = df[target_column]
-
-    # First split: training + validation vs. test
-    X_train_val, X_test, y_train_val, y_test = train_test_split(
-        X, y, test_size=test_size, random_state=random_state
-    )
-
-    # Second split: training vs. validation
-    # Adjust validation size to account for the first split
-    adjusted_val_size = val_size / (1 - test_size)
-
-    X_train, X_val, y_train, y_val = train_test_split(
-        X_train_val, y_train_val, test_size=adjusted_val_size, random_state=random_state
-    )
-
+    # Log feature types
     logger.info(
-        f"Split data into train ({len(X_train)}), validation ({len(X_val)}), "
-        f"and test ({len(X_test)}) sets"
+        f"Processing {len(numerical_cols)} numerical features and {len(categorical_cols)} categorical features"
     )
 
-    return X_train, X_val, X_test, y_train, y_val, y_test
-
-
-def preprocess_data(filepath: str) -> pd.DataFrame:
-    """Load, clean, and preprocess rental listings data.
-
-    Args:
-        filepath: Path to the CSV file
-
-    Returns:
-        Preprocessed DataFrame
-    """
-    # Load data
-    df = load_data(filepath)
-
-    if len(df) == 0:
-        return pd.DataFrame()
-
-    # Clean data
-    cleaned_df = clean_data(df)
-
-    # Generate features
-    pipeline = FeaturePipeline()
-    features_df = generate_features(cleaned_df, pipeline)
-
-    return features_df
-
-
-if __name__ == "__main__":
-    # Configure logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    # Create preprocessing pipelines
+    categorical_transformer = Pipeline(
+        steps=[
+            ("imputer", SimpleImputer(strategy="constant", fill_value="Unknown")),
+            ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
+        ]
     )
 
-    # Process command-line arguments
-    import argparse
+    numerical_transformer = Pipeline(
+        steps=[
+            ("imputer", SimpleImputer(strategy="median")),
+            ("scaler", StandardScaler()),
+        ]
+    )
 
-    parser = argparse.ArgumentParser(description="Preprocess rental listings data")
+    # Create column transformer
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ("num", numerical_transformer, numerical_cols),
+            ("cat", categorical_transformer, categorical_cols),
+        ]
+    )
+
+    # Get feature names for one-hot encoded columns
+    onehot_cols = []
+    for col in categorical_cols:
+        unique_values = X[col].unique()
+        onehot_cols.extend([f"{col}_{val}" for val in unique_values if pd.notna(val)])
+
+    # Fit and transform
+    if categorical_cols and numerical_cols:
+        # Data quality check before preprocessing
+        nan_before = X.isna().sum().sum()
+        if nan_before > 0:
+            logger.warning(
+                f"Found {nan_before} NaN values in features before preprocessing"
+            )
+            for col, count in X.isna().sum()[X.isna().sum() > 0].items():
+                logger.warning(f"{col}: {count} NaN values")
+
+        # Apply preprocessing
+        X_processed = preprocessor.fit_transform(X)
+
+        # Create DataFrame with processed features with explicit dtype
+        processed_cols = numerical_cols + onehot_cols
+        df_processed = pd.DataFrame(
+            X_processed, columns=processed_cols, dtype=np.float64
+        )
+
+        # Add target back if it exists
+        if target is not None:
+            df_processed["price"] = target
+
+            # Data quality check after adding price
+            if df_processed["price"].isna().any():
+                logger.warning(
+                    f"Found {df_processed['price'].isna().sum()} NaN values in price column after processing"
+                )
+
+        # Final data quality check
+        nan_counts = df_processed.isna().sum()
+        if nan_counts.any():
+            logger.warning("Found NaN values in processed features:")
+            for col, count in nan_counts[nan_counts > 0].items():
+                logger.warning(f"{col}: {count} NaN values")
+    else:
+        logger.warning("No categorical or numerical columns found for preprocessing")
+        df_processed = X.copy()
+        if target is not None:
+            df_processed["price"] = target
+
+    return df_processed
+
+
+def main():
+    """Main function to parse arguments and preprocess data."""
+    parser = argparse.ArgumentParser(description="Preprocess rental data")
+
     parser.add_argument(
-        "--input",
-        type=str,
-        required=True,
-        help="Path to input CSV file or directory",
+        "--input", type=str, required=True, help="Path to input CSV file"
     )
+
     parser.add_argument(
-        "--output",
-        type=str,
-        default="data/processed/listings_processed.csv",
-        help="Path to output CSV file",
+        "--output", type=str, required=True, help="Path to save processed data"
+    )
+
+    parser.add_argument(
+        "--engineer-features", action="store_true", help="Create additional features"
     )
 
     args = parser.parse_args()
 
-    # Check if input is a directory or file
-    input_path = Path(args.input)
-    output_path = Path(args.output)
+    # Preprocess data
+    preprocess_data(args.input, args.output, args.engineer_features)
 
-    # Create output directory if it doesn't exist
-    output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    if input_path.is_dir():
-        # Process all CSV files in the directory
-        csv_files = list(input_path.glob("*.csv"))
-
-        if not csv_files:
-            logger.error(f"No CSV files found in {input_path}")
-            exit(1)
-
-        # Combine data from all files
-        df = combine_data_sources([str(file) for file in csv_files])
-    else:
-        # Process a single file
-        df = load_data(str(input_path))
-
-    if len(df) == 0:
-        logger.error("No data to process")
-        exit(1)
-
-    # Clean and preprocess data
-    cleaned_df = clean_data(df)
-
-    # Generate features
-    pipeline = FeaturePipeline()
-    features_df = generate_features(cleaned_df, pipeline)
-
-    # Save preprocessed data
-    features_df.to_csv(output_path, index=False)
-    logger.info(f"Saved preprocessed data to {output_path}")
+if __name__ == "__main__":
+    main()
