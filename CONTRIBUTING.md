@@ -25,6 +25,7 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org/) speci
 ```
 
 Types:
+
 - `feat`: A new feature
 - `fix`: A bug fix
 - `docs`: Documentation changes
@@ -34,6 +35,7 @@ Types:
 - `chore`: Changes to the build process or auxiliary tools
 
 Examples:
+
 - `feat(model): add support for XGBoost algorithm`
 - `fix(api): resolve null pointer issue in prediction endpoint`
 - `docs(readme): update installation instructions`
@@ -58,12 +60,14 @@ Examples:
 ## Code Style
 
 This project uses:
+
 - Black for code formatting
 - Flake8 for linting
 - Type hints for better code quality
 - Docstrings in Google format
 
 Run formatting and linting:
+
 ```bash
 black src tests
 flake8 src tests
@@ -72,6 +76,7 @@ flake8 src tests
 ## Testing
 
 Run tests:
+
 ```bash
 # Run all tests
 pytest
