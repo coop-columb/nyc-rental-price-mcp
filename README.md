@@ -1,6 +1,32 @@
 # NYC Rental Price Prediction Project
 
+This project provides a machine learning model for predicting NYC rental prices.
+
 ## Overview
+
+The project has been restructured to improve clarity and maintainability. The new structure is as follows:
+
+Root Directory:
+
+- README.md              : Project overview and structure description.
+- docs/                  : Additional documentation.
+- data/                  : Raw and processed data.
+- experiments/           : Exploratory notebooks and analysis.
+- src/                   : Core application code.
+
+Inside src/:
+
+- api/                   : API endpoints and server logic.
+- data_processing/       : Modules for data collection, scraping, and preprocessing.
+- models/                : Model training, inference, and related utilities.
+
+## Getting Started
+
+Follow instructions in each directory's README to set up and run the components.
+
+## Project Details
+
+### Project Overview
 
 This project implements a machine learning system for predicting rental prices in New York City. Using historical rental data, the system leverages neural networks to provide accurate price predictions based on apartment features and location data.
 
@@ -32,30 +58,34 @@ This project implements a machine learning system for predicting rental prices i
 ### Setup Instructions
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/your-username/nyc-rental-price-mcp.git
    cd nyc-rental-price-mcp
    ```
 
 2. Create and activate a virtual environment:
+
    ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
 3. Install the package in development mode:
+
    ```bash
    pip install -e .
    ```
 
 4. Install development dependencies:
+
    ```bash
    pip install -e ".[dev]"
    ```
 
 ## Project Structure
 
-```
+```bash
 nyc-rental-price-mcp/
 ├── data/                      # Data storage
 │   ├── raw/                   # Original, immutable data
@@ -119,6 +149,7 @@ print(f"Model evaluation: {metrics}")
 ## Model Components
 
 The project includes a robust neural network model implementation:
+
 ```python
 from nyc_rental_price.models.model import create_model
 
@@ -133,11 +164,13 @@ model = create_model(
 ### Using the API
 
 #### Running the API server
+
 ```bash
 uvicorn nyc_rental_price.api.main:app --reload
 ```
 
 #### Making predictions
+
 ```python
 import requests
 import json
@@ -170,11 +203,13 @@ print(f"Predicted monthly rent: ${result['predicted_price']:.2f}")
 ### Setting Up Development Environment
 
 1. Install development dependencies:
+
    ```bash
    pip install -e ".[dev]"
    ```
 
 2. Install pre-commit hooks:
+
    ```bash
    pre-commit install
    ```
@@ -182,11 +217,13 @@ print(f"Predicted monthly rent: ${result['predicted_price']:.2f}")
 ### Code Style
 
 This project uses:
+
 - Black for code formatting
 - Flake8 for linting
 - Type hints for better code quality
 
 Run formatting and linting:
+
 ```bash
 black src tests
 flake8 src tests
@@ -195,6 +232,7 @@ flake8 src tests
 ### Testing
 
 Run tests:
+
 ```bash
 # Run all tests
 pytest
@@ -207,7 +245,7 @@ pytest tests/performance
 
 ## Test Organization
 
-```
+```bash
 tests/
 ├── unit/               # Unit tests for individual components
 │   ├── test_scraper.py
@@ -215,7 +253,7 @@ tests/
 ├── integration/        # Integration tests
 ├── performance/        # Performance benchmarks
 └── conftest.py         # Shared test fixtures
-```
+# Code block with blank lines around it
 
 ### Contributing
 
@@ -228,6 +266,7 @@ tests/
 ### Documentation
 
 When adding new features, be sure to:
+
 - Add docstrings to all functions and classes
 - Update the README.md if necessary
 - Consider adding a notebook example if applicable

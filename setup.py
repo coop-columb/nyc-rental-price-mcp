@@ -1,5 +1,6 @@
-from setuptools import setup, find_packages
 import os
+
+from setuptools import find_packages, setup
 
 # Read version from __init__.py or use default
 version_file = os.path.join("src", "nyc_rental_price", "__init__.py")
@@ -8,7 +9,7 @@ try:
     with open(version_file, "r") as f:
         lines = [l.strip() for l in f.readlines() if l.startswith("__version__")]
         if lines:
-            version = lines[0].split("=")[1].strip().strip('"\'')
+            version = lines[0].split("=")[1].strip().strip("\"'")
 except (FileNotFoundError, IOError):
     pass
 
@@ -62,15 +63,27 @@ setup(
         "dev": [
             "pytest>=6.2.5",
             "pytest-cov>=2.12.1",
-            "black>=21.9b0",
-            "flake8>=3.9.2",
-            "mypy>=0.910",
-            "isort>=5.9.3",
-            "pre-commit>=2.15.0",
+            "black>=22.3.0",
+            "ruff>=0.0.262",
+            "mypy>=0.991",
+            "isort>=5.12.0",
+            "pre-commit>=3.2.0",
+            "types-requests>=2.28.0",
+            "types-PyYAML>=6.0.0",
+            "coverage>=7.2.0",
+            "interrogate>=1.5.0",
+            "nbstripout>=0.6.1",
+            "nbqa>=1.7.0",
         ],
         "doc": [
             "sphinx>=4.2.0",
             "sphinx-rtd-theme>=1.0.0",
+            "sphinx-autodoc-typehints>=1.12.0",
+            "myst-parser>=0.18.0",
+        ],
+        "perf": [
+            "pytest-benchmark>=4.0.0",
+            "memory-profiler>=0.60.0",
         ],
     },
     entry_points={

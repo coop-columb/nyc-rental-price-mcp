@@ -2,25 +2,13 @@
 requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[project]
-name = "nyc_rental_price"
-version = "0.1.0"
-description = "Machine learning model for predicting NYC rental prices"
-readme = "README.md"
-requires-python = ">=3.8"
-license = {text = "MIT"}
-authors = [
-    {name = "NYC Rental Price Prediction Team", email = "example@example.com"}
-]
-keywords = ["nyc", "rental", "price", "prediction", "machine learning", "pytorch", "tensorflow"]
 [tool.black]
 line-length = 88
 target-version = ['py38']
 include = '\.pyi?$'
 exclude = '''
 /(
-    \.eggs
-  | \.git
+    \.git
   | \.hg
   | \.mypy_cache
   | \.tox
@@ -36,6 +24,12 @@ exclude = '''
 profile = "black"
 multi_line_output = 3
 
+[tool.ruff]
+line-length = 88
+target-version = "py38"
+select = ["E", "F", "B", "I"]
+ignore = ["E203", "E501"]
+
 [tool.mypy]
 python_version = "3.8"
 warn_return_any = true
@@ -43,19 +37,21 @@ warn_unused_configs = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = "test_*.py"
-
-[tool.flake8]
-max-line-length = 88
-extend-ignore = "E203"
-exclude = [
-    ".git",
-    "__pycache__",
-    "build",
-    "dist",
-    ".eggs",
-    "venv",
-]
-
+[tool.interrogate]
+ignore-init-method = true
+ignore-init-module = false
+ignore-magic = false
+ignore-semiprivate = false
+ignore-private = false
+ignore-property-decorators = false
+ignore-module = true
+ignore-nested-functions = false
+ignore-nested-classes = true
+ignore-setters = false
+fail-under = 95
+exclude = ["setup.py", "docs", "build"]
+ignore-regex = ["^get$", "^mock_.*", ".*BaseClass.*"]
+verbose = 0
+quiet = false
+whitelist-regex = []
+color = true

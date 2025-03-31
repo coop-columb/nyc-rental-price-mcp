@@ -1,3 +1,5 @@
+(none – file is moved)
+
 """Scraper module for fetching rental listings."""
 
 import requests

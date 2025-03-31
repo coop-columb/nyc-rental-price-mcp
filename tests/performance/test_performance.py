@@ -17,7 +17,10 @@ def load_model():
         model = keras.Sequential(
             [
                 keras.Input(shape=(10,)),
-                keras.layers.Dense(10, activation="relu"),
+                keras.layers.Dense(16, activation="relu"),
+                keras.layers.Dropout(0.3),
+                keras.layers.Dense(8, activation="relu"),
+                keras.layers.Dropout(0.3),
                 keras.layers.Dense(1),
             ]
         )
@@ -42,9 +45,9 @@ def test_prediction_speed(benchmark):
     # Load the model first (outside of the benchmark)
     model = load_model()
 
-    # Create sample input data
+    # Create sample input data with correct shape (matching the actual model input shape)
     num_samples = 100
-    input_data = np.random.random((num_samples, 10))
+    input_data = np.random.random((num_samples, 10))  # Changed from 5 to 10 features
 
     # Warm-up run (outside of the benchmark)
     _ = model.predict(input_data[:1])
