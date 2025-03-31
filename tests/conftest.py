@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 from pathlib import Path
 
-from nyc_rental_price.data.preprocessing import preprocess_data
+from data_processing.preprocessing import preprocess_data
 from nyc_rental_price.models.model import create_model
 
 
