@@ -1,3 +1,5 @@
+(none – file is moved)
+
 """Model module for NYC rental price prediction.
 
 This module exports functions for model creation, training, and prediction.

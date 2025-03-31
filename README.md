@@ -1,5 +1,27 @@
 # NYC Rental Price Prediction Project
 
+This project provides a machine learning model for predicting NYC rental prices.
+
+## Overview
+The project has been restructured to improve clarity and maintainability. The new structure is as follows:
+
+Root Directory:
+  - README.md              : Project overview and structure description.
+  - docs/                  : Additional documentation.
+  - data/                  : Raw and processed data.
+  - experiments/           : Exploratory notebooks and analysis.
+  - src/                   : Core application code.
+
+Inside src/:
+  - api/                   : API endpoints and server logic.
+  - data_processing/       : Modules for data collection, scraping, and preprocessing.
+  - models/                : Model training, inference, and related utilities.
+
+## Getting Started
+Follow instructions in each directory's README to set up and run the components.
+
+# NYC Rental Price Prediction Project
+
 ## Overview
 
 This project implements a machine learning system for predicting rental prices in New York City. Using historical rental data, the system leverages neural networks to provide accurate price predictions based on apartment features and location data.
