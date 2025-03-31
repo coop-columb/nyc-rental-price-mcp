@@ -1,366 +1,156 @@
-"""Training module for NYC rental price prediction models.
-
-This module provides functions for training and evaluating rental price prediction models.
-"""
+"""Training module for NYC rental price prediction models."""
 
 import argparse
 import logging
 import os
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
+from sklearn.model_selection import train_test_split
 
-from src.nyc_rental_price.data.preprocessing import (
-    clean_data,
-    generate_features,
-    load_data,
-    split_data,
-)
-from src.nyc_rental_price.features import FeaturePipeline
 from src.nyc_rental_price.models.model import (
-    BaseModel,
     GradientBoostingModel,
     LightGBMModel,
-    XGBoostModel,
     ModelEnsemble,
     NeuralNetworkModel,
-    BayesianOptimizer,
-    CrossValidator,
+    XGBoostModel,
 )
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
 logger = logging.getLogger(__name__)
 
 
-def cross_validate_model(
-    model: BaseModel,
-    X: pd.DataFrame,
-    y: pd.Series,
-    n_folds: int = 5,
-    random_state: int = 42,
-) -> Dict[str, List[float]]:
-    """Perform k-fold cross-validation for model evaluation.
-
-    Args:
-        model: Model to evaluate
-        X: Feature data
-        y: Target data
-        n_folds: Number of cross-validation folds
-        random_state: Random seed for reproducibility
-
-    Returns:
-        Dictionary of evaluation metrics for each fold
-    """
-    logger.info(f"Performing {n_folds}-fold cross-validation for {model.model_name}")
-    
-    validator = CrossValidator(
-        model=model,
-        n_folds=n_folds,
-        random_state=random_state,
+def load_data(data_path):
+    """Load and prepare data for model training."""
+    df = pd.read_csv(data_path)
+    logger.info(
+        f"Loaded data from {data_path} with {df.shape[0]} rows and {df.shape[1]} columns"
     )
-    
-    cv_metrics = validator.validate(X, y)
-    
-    # Log average metrics
-    for metric, values in cv_metrics.items():
-        mean_value = np.mean(values)
-        std_value = np.std(values)
-        logger.info(f"CV {metric}: {mean_value:.4f} (+/- {std_value:.4f})")
-    
-    return cv_metrics
 
+    # Check for NaN values
+    nan_counts = df.isna().sum()
+    if nan_counts.any():
+        logger.warning("Found NaN values in the following columns:")
+        for col, count in nan_counts[nan_counts > 0].items():
+            logger.warning(f"{col}: {count} NaN values")
 
-def train_model(
-    model: BaseModel,
-    X_train: pd.DataFrame,
-    y_train: pd.Series,
-    X_val: Optional[pd.DataFrame] = None,
-    y_val: Optional[pd.Series] = None,
-) -> BaseModel:
-    """Train a model on the training data.
-
-    Args:
-        model: Model to train
-        X_train: Training features
-        y_train: Training target
-        X_val: Optional validation features
-        y_val: Optional validation target
-
-    Returns:
-        Trained model
-    """
-    logger.info(f"Training {model.model_name}")
-
-    # Train the model
-    if (
-        isinstance(model, NeuralNetworkModel)
-        and X_val is not None
-        and y_val is not None
-    ):
-        model.fit(X_train, y_train, validation_data=(X_val, y_val))
-    else:
-        model.fit(X_train, y_train)
-
-    # Save the model
-    model.save_model()
-
-    return model
-
-
-def evaluate_model(
-    model: BaseModel,
-    X_test: pd.DataFrame,
-    y_test: pd.Series,
-    output_dir: Optional[str] = None,
-) -> Dict[str, float]:
-    """Evaluate a model on the test data.
-
-    Args:
-        model: Model to evaluate
-        X_test: Test features
-        y_test: Test target
-        output_dir: Optional directory to save evaluation results
-
-    Returns:
-        Dictionary of evaluation metrics
-    """
-    logger.info(f"Evaluating {model.model_name}")
-
-    # Create output directory if specified
-    if output_dir:
-        output_dir = Path(output_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-    # Evaluate the model
-    metrics = model.evaluate(X_test, y_test)
-
-    # Generate predictions
-    y_pred = model.predict(X_test)
-
-    # Create evaluation plots
-    if output_dir:
-        # Create a figure for the plots
-        fig, axes = plt.subplots(1, 2, figsize=(15, 6))
-
-        # Actual vs. Predicted plot
-        axes[0].scatter(y_test, y_pred, alpha=0.5)
-        axes[0].plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], "k--")
-        axes[0].set_xlabel("Actual Price")
-        axes[0].set_ylabel("Predicted Price")
-        axes[0].set_title("Actual vs. Predicted Rental Prices")
-
-        # Residuals plot
-        residuals = y_test - y_pred
-        axes[1].scatter(y_pred, residuals, alpha=0.5)
-        axes[1].axhline(y=0, color="k", linestyle="--")
-        axes[1].set_xlabel("Predicted Price")
-        axes[1].set_ylabel("Residuals")
-        axes[1].set_title("Residuals vs. Predicted Rental Prices")
-
-        # Add metrics as text
-        metrics_text = "\n".join(
-            [
-                f"MAE: ${metrics['mae']:.2f}",
-                f"RMSE: ${metrics['rmse']:.2f}",
-                f"R²: {metrics['r2']:.4f}",
-                f"MAPE: {metrics['mape']:.2f}%",
-            ]
-        )
-
-        fig.text(0.02, 0.02, metrics_text, fontsize=12)
-
-        # Adjust layout and save
-        plt.tight_layout()
-        plt.savefig(output_dir / f"{model.model_name}_evaluation.png", dpi=300)
-        plt.close()
-
-        # Save predictions and actual values
-        results_df = pd.DataFrame(
-            {
-                "actual": y_test,
-                "predicted": y_pred,
-                "residual": residuals,
-            }
-        )
-
-        results_df.to_csv(
-            output_dir / f"{model.model_name}_predictions.csv", index=False
-        )
-
-        # If the model is a gradient boosting model, plot feature importances
-        if isinstance(model, GradientBoostingModel) and hasattr(
-            model, "feature_importances_"
-        ):
-            plt.figure(figsize=(10, 8))
-
-            # Get top 20 features
-            top_features = model.feature_importances_.head(20)
-
-            # Plot feature importances
-            sns.barplot(x=top_features.values, y=top_features.index)
-            plt.title(f"Top 20 Feature Importances - {model.model_name}")
-            plt.tight_layout()
-            plt.savefig(
-                output_dir / f"{model.model_name}_feature_importances.png", dpi=300
-            )
-            plt.close()
-
-            # Save feature importances
-            model.feature_importances_.to_csv(
-                output_dir / f"{model.model_name}_feature_importances.csv"
+    # Handle NaN values in target column
+    if "price" in df.columns:
+        initial_rows = len(df)
+        df = df.dropna(subset=["price"])
+        dropped_rows = initial_rows - len(df)
+        if dropped_rows > 0:
+            logger.warning(
+                f"Dropped {dropped_rows} rows with NaN values in price column"
             )
 
-    return metrics
+    return df
 
 
-def tune_model(
-    model: BaseModel,
-    X_train: pd.DataFrame,
-    y_train: pd.Series,
-    param_space: Dict[str, Union[float, int, str]],
-    n_trials: int = 50,
-    cv_folds: int = 5,
-) -> Tuple[BaseModel, Dict[str, Union[float, int, str]]]:
-    """Tune model hyperparameters using Bayesian optimization.
+def train_model(args):
+    """Train a model with the specified parameters."""
+    # Load data
+    data = load_data(args.data_path)
 
-    Args:
-        model: Model to tune
-        X_train: Training features
-        y_train: Training target
-        param_space: Dictionary defining the hyperparameter search space
-        n_trials: Number of optimization trials
-        cv_folds: Number of cross-validation folds
+    # Extract target variable
+    if args.target_column not in data.columns:
+        raise ValueError(f"Target column '{args.target_column}' not found in data")
 
-    Returns:
-        Tuple of (tuned model, best parameters)
-    """
-    logger.info(f"Tuning hyperparameters for {model.model_name}")
-    
-    optimizer = BayesianOptimizer(
-        model=model,
-        param_space=param_space,
-        n_trials=n_trials,
-        cv_folds=cv_folds,
-    )
-    
-    best_params = optimizer.optimize(X_train, y_train)
-    tuned_model = create_model(model.model_type, **best_params)
-    
-    return tuned_model, best_params
-
-
-def create_model(model_type: str, **kwargs) -> BaseModel:
-    """Create a model of the specified type.
-
-    Args:
-        model_type: Type of model to create
-        **kwargs: Additional arguments to pass to the model constructor
-
-    Returns:
-        Created model
-    """
-    if model_type == "gradient_boosting":
-        return GradientBoostingModel(**kwargs)
-    elif model_type == "lightgbm":
-        return LightGBMModel(**kwargs)
-    elif model_type == "xgboost":
-        return XGBoostModel(**kwargs)
-    elif model_type == "neural_network":
-        return NeuralNetworkModel(**kwargs)
-    elif model_type == "ensemble":
-        # Create individual models
-        gb_model = GradientBoostingModel(model_name="gb_for_ensemble")
-        nn_model = NeuralNetworkModel(model_name="nn_for_ensemble")
-
-        # Create ensemble
-        ensemble = ModelEnsemble(
-            models=[gb_model, nn_model],
-            weights=[0.6, 0.4],  # Assign higher weight to gradient boosting
-            **kwargs,
-        )
-
-        return ensemble
-    else:
-        raise ValueError(f"Unsupported model type: {model_type}")
-
-
-def train_and_evaluate(
-    data_path: str,
-    model_type: str = "gradient_boosting",
-    output_dir: str = "models",
-    model_name: Optional[str] = None,
-    test_size: float = 0.2,
-    val_size: float = 0.1,
-    random_state: int = 42,
-    tune_hyperparameters: bool = False,
-    param_space: Optional[Dict[str, Union[float, int, str]]] = None,
-    n_trials: int = 50,
-    perform_cv: bool = False,
-    cv_folds: int = 5,
-) -> Dict[str, float]:
-    """Train and evaluate a model on the specified data.
-
-    Args:
-        data_path: Path to the data file
-        model_type: Type of model to train
-        output_dir: Directory to save model and evaluation results
-        model_name: Optional name for the model
-        test_size: Proportion of data to use for testing
-        val_size: Proportion of data to use for validation
-        random_state: Random seed for reproducibility
-
-    Returns:
-        Dictionary of evaluation metrics
-    """
-    # Load and preprocess data
-    logger.info(f"Loading data from {data_path}")
-    df = load_data(data_path)
-
-    if len(df) == 0:
-        logger.error(f"No data loaded from {data_path}")
-        return {}
-
-    # Clean data
-    df = clean_data(df)
-
-    # Generate features
-    pipeline = FeaturePipeline()
-    df = generate_features(df, pipeline)
+    y = data[args.target_column]
+    X = data.drop(columns=[args.target_column])
 
     # Split data
-    X_train, X_val, X_test, y_train, y_val, y_test = split_data(
-        df, test_size=test_size, val_size=val_size, random_state=random_state
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=args.test_size, random_state=42
     )
 
-    # Create model
-    if model_name is None:
-        model_name = f"{model_type}_model"
+    logger.info(f"Training data shape: {X_train.shape}")
+    logger.info(f"Test data shape: {X_test.shape}")
 
-    model = create_model(
-        model_type=model_type,
-        model_dir=output_dir,
-        model_name=model_name,
-        random_state=random_state,
-    )
+    # Validate data after split
+    logger.info("Validating data quality after split...")
+
+    # Check target variables
+    if y_train.isna().any():
+        logger.warning(f"Found {y_train.isna().sum()} NaN values in training target")
+        y_train = y_train.dropna()
+        X_train = X_train[y_train.index]
+
+    if y_test.isna().any():
+        logger.warning(f"Found {y_test.isna().sum()} NaN values in test target")
+        y_test = y_test.dropna()
+        X_test = X_test[y_test.index]
+
+    # Check feature variables
+    train_nan_counts = X_train.isna().sum()
+    test_nan_counts = X_test.isna().sum()
+
+    if train_nan_counts.any():
+        logger.warning("Found NaN values in training features:")
+        for col, count in train_nan_counts[train_nan_counts > 0].items():
+            logger.warning(f"{col}: {count} NaN values")
+        # Fill NaN values with median for numerical columns
+        for col in X_train.select_dtypes(include=["number"]).columns:
+            X_train[col] = X_train[col].fillna(X_train[col].median())
+            X_test[col] = X_test[col].fillna(
+                X_train[col].median()
+            )  # Use training median for test
+
+    # Create model based on model_type
+    if args.model_type == "gradient_boosting":
+        model = GradientBoostingModel(
+            n_estimators=args.n_estimators,
+            learning_rate=args.learning_rate,
+            max_depth=args.max_depth,
+        )
+    elif args.model_type == "lightgbm":
+        model = LightGBMModel(
+            n_estimators=args.n_estimators,
+            learning_rate=args.learning_rate,
+            max_depth=args.max_depth,
+        )
+    elif args.model_type == "xgboost":
+        model = XGBoostModel(
+            n_estimators=args.n_estimators,
+            learning_rate=args.learning_rate,
+            max_depth=args.max_depth,
+        )
+    elif args.model_type == "neural_network":
+        model = NeuralNetworkModel(
+            hidden_layers=[64, 32], activation="relu", learning_rate=0.001
+        )
+    elif args.model_type == "ensemble":
+        # Create an ensemble of multiple models
+        ensemble = ModelEnsemble()
+
+        # Add different models to the ensemble
+        ensemble.add_model(GradientBoostingModel())
+        ensemble.add_model(LightGBMModel())
+        ensemble.add_model(XGBoostModel())
+
+        model = ensemble
+    else:
+        raise ValueError(f"Unknown model type: {args.model_type}")
 
     # Train model
-    trained_model = train_model(model, X_train, y_train, X_val, y_val)
+    logger.info(f"Training {args.model_type} model...")
+    model.fit(X_train, y_train)
 
     # Evaluate model
-    metrics = evaluate_model(trained_model, X_test, y_test, output_dir)
+    metrics = model.evaluate(X_test, y_test)
+    logger.info(f"Model evaluation metrics: {metrics}")
 
-    return metrics
+    # Save model
+    os.makedirs(args.output_dir, exist_ok=True)
+    model_path = os.path.join(args.output_dir, f"{args.model_type}_model.pkl")
+    model.save_model(model_path)
+    logger.info(f"Model saved to {model_path}")
+
+    return model, metrics
 
 
-if __name__ == "__main__":
+def main():
+    """Main function to parse arguments and train a model."""
     parser = argparse.ArgumentParser(
         description="Train a rental price prediction model"
     )
@@ -369,29 +159,28 @@ if __name__ == "__main__":
         "--data-path",
         type=str,
         required=True,
-        help="Path to the processed data file",
+        help="Path to the processed data CSV file",
     )
 
     parser.add_argument(
         "--model-type",
         type=str,
-        default="ensemble",
-        choices=["gradient_boosting", "neural_network", "ensemble"],
+        default="gradient_boosting",
+        choices=[
+            "gradient_boosting",
+            "lightgbm",
+            "xgboost",
+            "neural_network",
+            "ensemble",
+        ],
         help="Type of model to train",
     )
 
     parser.add_argument(
-        "--output-dir",
+        "--target-column",
         type=str,
-        default="models",
-        help="Directory to save model and evaluation results",
-    )
-
-    parser.add_argument(
-        "--model-name",
-        type=str,
-        default=None,
-        help="Name for the model",
+        default="price",
+        help="Name of the target column in the data",
     )
 
     parser.add_argument(
@@ -402,33 +191,38 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--val-size",
-        type=float,
-        default=0.1,
-        help="Proportion of data to use for validation",
+        "--n-estimators",
+        type=int,
+        default=100,
+        help="Number of estimators for tree-based models",
     )
 
     parser.add_argument(
-        "--random-state",
-        type=int,
-        default=42,
-        help="Random seed for reproducibility",
+        "--learning-rate", type=float, default=0.1, help="Learning rate for models"
+    )
+
+    parser.add_argument(
+        "--max-depth", type=int, default=3, help="Maximum depth for tree-based models"
+    )
+
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default="models",
+        help="Directory to save the trained model",
     )
 
     args = parser.parse_args()
 
-    # Train and evaluate model
-    metrics = train_and_evaluate(
-        data_path=args.data_path,
-        model_type=args.model_type,
-        output_dir=args.output_dir,
-        model_name=args.model_name,
-        test_size=args.test_size,
-        val_size=args.val_size,
-        random_state=args.random_state,
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
-    # Print metrics
-    logger.info("Evaluation metrics:")
-    for metric, value in metrics.items():
-        logger.info(f"  {metric}: {value:.4f}")
+    # Train model
+    train_model(args)
+
+
+if __name__ == "__main__":
+    main()
