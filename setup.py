@@ -1,5 +1,6 @@
-from setuptools import setup, find_packages
 import os
+
+from setuptools import find_packages, setup
 
 # Read version from __init__.py or use default
 version_file = os.path.join("src", "nyc_rental_price", "__init__.py")
@@ -8,7 +9,7 @@ try:
     with open(version_file, "r") as f:
         lines = [l.strip() for l in f.readlines() if l.startswith("__version__")]
         if lines:
-            version = lines[0].split("=")[1].strip().strip('"\'')
+            version = lines[0].split("=")[1].strip().strip("\"'")
 except (FileNotFoundError, IOError):
     pass
 
