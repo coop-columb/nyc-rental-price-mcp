@@ -11,10 +11,10 @@ assignees: ''
 
 ## Reproduction Steps
 <!-- Steps to reproduce the behavior -->
-1. 
-2. 
-3. 
-4. 
+1.
+2.
+3.
+4.
 
 ## Expected Behavior
 <!-- A clear and concise description of what you expected to happen -->
@@ -23,6 +23,7 @@ assignees: ''
 <!-- What actually happened, including error messages and stack traces if available -->
 
 ## Environment
+
 - OS: [e.g. macOS 12.6, Windows 11, Ubuntu 22.04]
 - Python version: [e.g. 3.9.7]
 - Package version: [e.g. 0.1.0]
