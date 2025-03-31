@@ -1,20 +1,23 @@
-(none – file is moved)
+"""API module for NYC rental price prediction.
 
-"""API module for NYC rental price prediction service.
-
-This module exports API endpoints for the rental price prediction service.
+This module provides a FastAPI application for predicting rental prices.
 """
 
-from src.nyc_rental_price.api.main import app, predict, health_check
+# Import main API components
+from src.nyc_rental_price.api.main import (
+    app,
+    PropertyFeatures,
+    PredictionResponse,
+    BatchPredictionRequest,
+    BatchPredictionResponse,
+    ExplanationResponse,
+)
 
-__all__ = ["app", "predict", "health_check"]
-
-"""NYC Rental Price API package.
-
-This package provides the API for predicting NYC rental prices.
-"""
-
-from .main import app
-
-__all__ = ["app"]
-
+__all__ = [
+    "app",
+    "PropertyFeatures",
+    "PredictionResponse",
+    "BatchPredictionRequest",
+    "BatchPredictionResponse",
+    "ExplanationResponse",
+]

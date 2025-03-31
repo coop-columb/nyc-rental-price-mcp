@@ -1,11 +1,20 @@
 """Feature engineering module for NYC rental price prediction.
 
-This module exports functions for feature extraction, transformation, and selection.
+This module provides classes and functions for generating features from rental listings data.
 """
 
-# Import feature engineering functions
-# Example: from src.nyc_rental_price.features.build_features import create_features, select_features
+from .neighborhood import NeighborhoodEmbedding
+from .distance import DistanceFeatureGenerator
+from .text import TextFeatureExtractor
+from .temporal import TemporalFeatureGenerator
+from .encoder import TargetEncoder
+from .pipeline import FeaturePipeline
 
-# Placeholder until specific feature engineering functions are implemented
-__all__ = []
-
+__all__ = [
+    "NeighborhoodEmbedding",
+    "DistanceFeatureGenerator",
+    "TextFeatureExtractor",
+    "TemporalFeatureGenerator",
+    "TargetEncoder",
+    "FeaturePipeline",
+]

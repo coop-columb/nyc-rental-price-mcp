@@ -1,31 +1,28 @@
-(none – file is moved)
-
 """Model module for NYC rental price prediction.
 
-This module exports functions for model creation, training, and prediction.
-
-This package contains model definitions and training utilities for
-predicting rental prices in New York City.
+This module provides model implementations for rental price prediction.
 """
 
-from nyc_rental_price.models.model import build_model, create_model, load_model, save_model
-from nyc_rental_price.models.train import (
-    build_complex_model,
-    evaluate_model,
-    load_processed_data,
-    split_data,
+from src.nyc_rental_price.models.model import (
+    BaseModel,
+    GradientBoostingModel,
+    NeuralNetworkModel,
+    ModelEnsemble,
+)
+from src.nyc_rental_price.models.train import (
     train_model,
+    evaluate_model,
+    create_model,
+    train_and_evaluate,
 )
 
 __all__ = [
-    "build_model",
-    "create_model",
-    "load_model",
-    "save_model",
-    "build_complex_model",
-    "evaluate_model",
-    "load_processed_data", 
-    "split_data",
+    "BaseModel",
+    "GradientBoostingModel",
+    "NeuralNetworkModel",
+    "ModelEnsemble",
     "train_model",
+    "evaluate_model",
+    "create_model",
+    "train_and_evaluate",
 ]
-
