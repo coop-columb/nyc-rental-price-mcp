@@ -29,8 +29,8 @@ def split_data(df, target="price"):
     return X_train, X_test, y_train, y_test
 
 
-def build_model(input_shape):
-    logging.info("Building MCP model architecture")
+def build_complex_model(input_shape):
+    logging.info("Building complex MCP model architecture")
     model = tf.keras.Sequential(
         [
             tf.keras.Input(shape=(input_shape,)),
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     # model = create_model(X_train.shape[1])
     
     # Complex model defined in this file
-    model = build_model(X_train.shape[1])
+    model = build_complex_model(X_train.shape[1])
     
     train_model(model, X_train, y_train)
     results = evaluate_model(model, X_test, y_test)
