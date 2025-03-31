@@ -1,4 +1,4 @@
-(none – file is moved)
+"""Training and testing utilities for NYC rental price prediction models."""
 
 import logging
 

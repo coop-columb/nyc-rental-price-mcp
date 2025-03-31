@@ -17,7 +17,10 @@ def sample_data():
         'bedrooms': np.random.randint(0, 5, 100),
         'bathrooms': np.random.choice([1.0, 1.5, 2.0, 2.5, 3.0], 100),
         'sqft': np.random.randint(400, 2000, 100),
-        'neighborhood': np.random.choice(['Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten Island'], 100),
+        'neighborhood': np.random.choice(
+            ['Manhattan', 'Brooklyn', 'Queens',
+             'Bronx', 'Staten Island'],
+            100),
         'building_age_years': np.random.randint(0, 100, 100),
         'floor': np.random.randint(1, 30, 100),
         'has_elevator': np.random.choice([0, 1], 100),
@@ -40,7 +43,7 @@ def processed_data(sample_data):
 def trained_model(processed_data):
     """Create a small model and train it minimally for testing."""
     X, y = processed_data
-    
+
     # Get input shape from processed features
     input_dim = X.shape[1]
     
